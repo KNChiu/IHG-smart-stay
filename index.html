@@ -95,6 +95,7 @@
     .brow span:last-child{font-weight:500;color:var(--color-text-primary);}
     .brow.accent span:last-child{color:#533AB7;}
     .brow.muted span:last-child{color:var(--color-text-secondary);}
+    .brow.nested{padding-left:14px;border-left:2px solid var(--color-border-tertiary);margin-left:4px;}
     .btotal{border-top:0.5px solid var(--color-border-tertiary);margin-top:6px;padding-top:8px;}
     .btotal span:first-child{font-weight:500;color:var(--color-text-primary);}
     .btotal span:last-child{font-size:15px;font-weight:500;}
@@ -160,7 +161,7 @@
 
     <div class="section-title">住宿資訊</div>
 
-    <div class="field-label">總房價（TWD，不含稅與服務費）</div>
+    <div class="field-label">淨房價（Net Room Rate，TWD）</div>
     <div class="field-row">
       <span class="field-prefix">NT$</span>
       <input type="number" id="roomRate" value="5000" min="0" step="100" oninput="calc()" />
@@ -216,20 +217,36 @@
       </div>
     </div>
 
+    <div class="toggle-row">
+      <label class="toggle"><input type="checkbox" id="tcbToggle" onchange="toggleTcb()" /><span class="toggle-slider"></span></label>
+      <label for="tcbToggle">TCB 刷卡回饋（依淨房價計算）</label>
+    </div>
+    <div class="addon-block" id="tcb-block" style="display:none;">
+      <div class="field-label">回饋率（預設 10%）</div>
+      <div class="field-row" style="gap:4px;">
+        <input type="number" id="tcbRate" value="10" min="0" max="100" step="0.5" oninput="calc()" style="width:64px;" />
+        <span class="field-prefix">%</span>
+        <span class="field-prefix" style="font-size:12px;color:var(--color-text-tertiary);">回饋金：<span id="tcb-rebate-summary">NT$0</span></span>
+      </div>
+      <p class="note" style="margin-top:0;">依淨房價（不含稅金與服務費）計算回饋，等同降低現金付款有效成本。</p>
+    </div>
+
     <hr class="divider" />
 
     <div class="section-title">消費總額明細</div>
     <div class="breakdown-box">
-      <div class="brow"><span>總房價（不含稅費）</span><span id="d-base">—</span></div>
-      <div class="brow muted"><span id="d-svc-label">服務費</span><span id="d-svc">—</span></div>
-      <div class="brow muted"><span id="d-tax-label">稅金</span><span id="d-tax">—</span></div>
+      <div class="brow"><span>淨房價（Net Room Rate）</span><span id="d-base">—</span></div>
+      <div class="brow muted nested"><span id="d-svc-label">服務費</span><span id="d-svc">—</span></div>
+      <div class="brow muted nested"><span id="d-tax-label">稅金</span><span id="d-tax">—</span></div>
       <div class="brow muted" id="d-addon-row" style="display:none;"><span id="d-addon-label">加購積分費用</span><span id="d-addon-cost">—</span></div>
       <div class="brow btotal"><span>實付總額</span><span id="d-total">—</span></div>
+      <div class="brow muted" id="d-tcb-row" style="display:none;"><span>TCB 刷卡回饋 <span id="d-tcb-rate-label"></span></span><span id="d-tcb-rebate">—</span></div>
+      <div class="brow btotal" id="d-effective-row" style="display:none;"><span>回饋後有效成本</span><span id="d-effective">—</span></div>
     </div>
 
     <div class="section-title">可獲得積分</div>
     <div class="card-grid">
-      <div class="mcard"><div class="ml">住宿積分</div><div class="mv" id="e-pts" style="color:#533AB7;">—</div><div class="ms">依房價計算</div></div>
+      <div class="mcard"><div class="ml">住宿積分</div><div class="mv" id="e-pts" style="color:#533AB7;">—</div><div class="ms">依淨房價計算</div></div>
       <div class="mcard"><div class="ml">加購積分</div><div class="mv" id="e-addon">—</div><div class="ms">額外加計</div></div>
       <div class="mcard"><div class="ml">積分合計</div><div class="mv" id="e-total" style="color:#533AB7;">—</div><div class="ms">pts 總計</div></div>
     </div>
@@ -255,6 +272,7 @@
     <div class="field-row">
       <input type="number" id="threshold" value="0.005" min="0.001" step="0.001" oninput="calc()" />
       <span class="field-prefix">USD / pt</span>
+      <span class="field-prefix" style="font-size:12px;color:var(--color-text-tertiary);">≈ <span id="threshold-twd">—</span> NT$/pt</span>
     </div>
 
     <div class="card-grid">
@@ -264,7 +282,7 @@
         <div class="ml">實際省下</div>
         <div class="mv" id="v-save">—</div>
         <div class="mp" id="v-pct">—</div>
-        <div class="ms">vs 現金實付總額</div>
+        <div class="ms" id="v-save-label">vs 現金實付總額</div>
       </div>
     </div>
 
@@ -272,6 +290,7 @@
       <div class="brow muted"><span>現金實付總額</span><span id="vd-cash">—</span></div>
       <div class="brow muted"><span>− 兌換積分機會成本</span><span id="vd-redeem">—</span></div>
       <div class="brow muted"><span>− 現金回賺積分價值</span><span id="vd-earn">—</span></div>
+      <div class="brow muted" id="vd-tcb-row" style="display:none;"><span>− TCB 刷卡回饋（淨房價）</span><span id="vd-tcb">—</span></div>
       <div class="brow btotal accent"><span>實際省下（選積分）</span><span id="vd-total">—</span></div>
     </div>
 
@@ -285,7 +304,7 @@
 
     <p class="note">
       <i class="ti ti-info-circle" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:3px;"></i>
-      實際省下 = 現金實付總額 − 兌換積分機會成本 − 現金回賺積分價值。比例 = 實際省下 ÷ 現金實付總額。正數代表選積分划算，負數代表選現金划算。
+      <span id="note-formula">實際省下 = 現金實付總額 − 兌換積分機會成本 − 現金回賺積分價值。</span>比例 = 實際省下 ÷ 現金實付總額。正數代表選積分划算，負數代表選現金划算。
     </p>
     </div>
   </div>
@@ -341,6 +360,15 @@
     calc();
   }
 
+  function toggleTcb(){
+    const on=document.getElementById('tcbToggle').checked;
+    document.getElementById('tcb-block').style.display=on?'block':'none';
+    document.getElementById('d-tcb-row').style.display=on?'flex':'none';
+    document.getElementById('d-effective-row').style.display=on?'flex':'none';
+    document.getElementById('vd-tcb-row').style.display=on?'flex':'none';
+    calc();
+  }
+
   function calc(){
     const t=TIERS[currentTier];
     const rate=parseFloat(document.getElementById('roomRate').value)||0;
@@ -353,6 +381,9 @@
     const costEach=parseFloat(document.getElementById('addonCostEach').value)||0;
     const addonCostTotal=addonOn?costEach*addonQty:0;
     const currentAddonPts=addonOn?addonPtsEach*addonQty:0;
+    const tcbOn=document.getElementById('tcbToggle').checked;
+    const tcbRate=parseFloat(document.getElementById('tcbRate').value)||0;
+    const tcbRebate=tcbOn?rate*(tcbRate/100):0;
 
     updateAddonSummary();
 
@@ -368,6 +399,10 @@
     document.getElementById('d-addon-label').textContent='加購積分費用（+'+currentAddonPts.toLocaleString()+' pts × '+addonQty+'）';
     document.getElementById('d-addon-cost').textContent='+ NT$'+fmt(addonCostTotal);
     document.getElementById('d-total').textContent='NT$'+fmt(totalWithFees);
+    document.getElementById('d-tcb-rate-label').textContent=tcbRate+'%';
+    document.getElementById('d-tcb-rebate').textContent='− NT$'+fmt(tcbRebate);
+    document.getElementById('d-effective').textContent='NT$'+fmt(totalWithFees-tcbRebate);
+    document.getElementById('tcb-rebate-summary').textContent='NT$'+fmt(tcbRebate);
 
     const earnUSD=rate/ex;
     const baseP=Math.round(earnUSD*t.base);
@@ -380,21 +415,24 @@
     document.getElementById('e-addon').textContent=addonOn?'+'+currentAddonPts.toLocaleString():'—';
     document.getElementById('e-total').textContent=fmt(totalPts);
     document.getElementById('b-base').textContent=fmt(baseP)+' pts';
-    document.getElementById('b-bonus-label').textContent=t.label+' 加成（+'+(bonusPct>0?bonusPct+'%，':'')+t.bonus+' pts/USD）';
-    document.getElementById('b-bonus').textContent=(t.bonus>0?'+':'')+fmt(bonusP)+' pts';
-    document.getElementById('b-addon-label').textContent='加購定額積分（'+addonPtsEach.toLocaleString()+' × '+addonQty+'）';
+    document.getElementById('b-bonus-label').textContent=t.bonus>0?t.label+' 加成（+'+(bonusPct>0?bonusPct+'%，':'')+t.bonus+' pts/USD）':'等級加成';
+    document.getElementById('b-bonus').textContent=t.bonus>0?'+'+fmt(bonusP)+' pts':'—';
+    document.getElementById('b-addon-label').textContent=addonOn?'加購定額積分（'+addonPtsEach.toLocaleString()+' × '+addonQty+'）':'加購定額積分';
     document.getElementById('b-addon').textContent=addonOn?'+'+currentAddonPts.toLocaleString()+' pts':'—';
     document.getElementById('b-total-label').textContent='總積分（'+t.total+' pts/USD）';
     document.getElementById('b-total').textContent=fmt(totalPts)+' pts';
 
+    document.getElementById('threshold-twd').textContent=(threshold*ex).toFixed(2);
+
     const redeemCostTWD=redeemPts*threshold*ex;
     const earnValueTWD=totalPts*threshold*ex;
-    const saved=totalWithFees-redeemCostTWD-earnValueTWD;
+    const saved=totalWithFees-redeemCostTWD-earnValueTWD-tcbRebate;
     const pct=totalWithFees>0?(saved/totalWithFees*100):0;
 
     document.getElementById('v-redeem-cost').textContent='NT$'+fmt(redeemCostTWD);
     document.getElementById('v-earn-value').textContent='NT$'+fmt(earnValueTWD);
     document.getElementById('v-save').textContent=(saved>=0?'+':'-')+'NT$'+fmt(Math.abs(saved));
+    document.getElementById('v-save-label').textContent=tcbOn?'vs 現金有效成本（含 TCB 回饋）':'vs 現金實付總額';
 
     const pctEl=document.getElementById('v-pct');
     pctEl.textContent=(pct>=0?'+':'')+pct.toFixed(1)+'%';
@@ -403,21 +441,27 @@
     document.getElementById('vd-cash').textContent='NT$'+fmt(totalWithFees);
     document.getElementById('vd-redeem').textContent='− NT$'+fmt(redeemCostTWD);
     document.getElementById('vd-earn').textContent='− NT$'+fmt(earnValueTWD);
-    document.getElementById('vd-total').textContent=(saved>=0?'+':'')+fmt(Math.round(saved));
+    document.getElementById('vd-tcb').textContent='− NT$'+fmt(tcbRebate);
+    document.getElementById('vd-total').textContent=(saved>=0?'+NT$':'-NT$')+fmt(Math.abs(Math.round(saved)));
 
     const box=document.getElementById('verdict-box');
     box.className='verdict-box';
+    const tcbNote=tcbOn?'（已含 NT$'+fmt(tcbRebate)+' TCB 回饋）':'';
+    const tcbNote2=tcbOn?'，包含 NT$'+fmt(tcbRebate)+' TCB 回饋':'';
     if(saved>=0){
       box.classList.add('good');
       document.getElementById('verdict-icon').textContent='✅';
       document.getElementById('verdict-title').textContent='用積分划算！';
-      document.getElementById('verdict-sub').textContent='選積分兌換比用現金付款省下 NT$'+fmt(saved)+'（'+pct.toFixed(1)+'%）。現金付款雖能賺回積分，但扣除兌換機會成本後，積分仍更划算。';
+      document.getElementById('verdict-sub').textContent='選積分兌換比用現金付款省下 NT$'+fmt(saved)+'（'+pct.toFixed(1)+'%）'+tcbNote+'。現金付款雖能賺回積分，但扣除兌換機會成本後，積分仍更划算。';
     } else {
       box.classList.add('bad');
       document.getElementById('verdict-icon').textContent='❌';
       document.getElementById('verdict-title').textContent='用現金較划算';
-      document.getElementById('verdict-sub').textContent='用現金付款並賺回積分，比用積分兌換多省 NT$'+fmt(Math.abs(saved))+'（'+Math.abs(pct).toFixed(1)+'%）。建議保留積分，等更高價值的房間再兌換。';
+      document.getElementById('verdict-sub').textContent='用現金付款並賺回積分'+tcbNote2+'，比用積分兌換多省 NT$'+fmt(Math.abs(saved))+'（'+Math.abs(pct).toFixed(1)+'%）。建議保留積分，等更高價值的房間再兌換。';
     }
+    document.getElementById('note-formula').textContent=tcbOn
+      ?'實際省下 = 現金實付總額 − 兌換積分機會成本 − 現金回賺積分價值 − TCB 刷卡回饋。'
+      :'實際省下 = 現金實付總額 − 兌換積分機會成本 − 現金回賺積分價值。';
   }
   calc();
   </script>
