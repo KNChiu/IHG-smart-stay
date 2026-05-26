@@ -240,8 +240,6 @@
       <div class="brow muted nested"><span id="d-tax-label">稅金</span><span id="d-tax">—</span></div>
       <div class="brow muted" id="d-addon-row" style="display:none;"><span id="d-addon-label">加購積分費用</span><span id="d-addon-cost">—</span></div>
       <div class="brow btotal"><span>實付總額</span><span id="d-total">—</span></div>
-      <div class="brow muted" id="d-tcb-row" style="display:none;"><span>TCB 刷卡回饋 <span id="d-tcb-rate-label"></span></span><span id="d-tcb-rebate">—</span></div>
-      <div class="brow btotal" id="d-effective-row" style="display:none;"><span>回饋後有效成本</span><span id="d-effective">—</span></div>
     </div>
 
     <div class="section-title">可獲得積分</div>
@@ -260,19 +258,30 @@
 
     <hr class="divider" />
 
-    <div class="section-title">用積分划算嗎？</div>
-
-    <div class="field-label">免費房晚所需積分（pts）</div>
-    <div class="field-row">
-      <input type="number" id="redeemPts" value="50000" min="1000" step="1000" oninput="calc()" />
-      <span class="field-prefix">pts</span>
-    </div>
+    <div class="section-title">現金付款淨成本</div>
 
     <div class="field-label"><i class="ti ti-target" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:3px;"></i>積分估值門檻（USD / pt）</div>
     <div class="field-row">
       <input type="number" id="threshold" value="0.005" min="0.001" step="0.001" oninput="calc()" />
       <span class="field-prefix">USD / pt</span>
       <span class="field-prefix" style="font-size:12px;color:var(--color-text-tertiary);">≈ <span id="threshold-twd">—</span> NT$/pt</span>
+    </div>
+
+    <div class="breakdown-box" style="margin-bottom:1rem;">
+      <div class="brow muted"><span>現金實付總額</span><span id="ncd-cash">—</span></div>
+      <div class="brow muted" id="ncd-tcb-row" style="display:none;"><span>− TCB 刷卡回饋</span><span id="ncd-tcb">—</span></div>
+      <div class="brow muted"><span>− 積分回賺價值（按估值門檻）</span><span id="ncd-earn">—</span></div>
+      <div class="brow btotal accent"><span>現金淨成本</span><span id="ncd-net">—</span></div>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="section-title">用積分划算嗎？</div>
+
+    <div class="field-label">免費房晚所需積分（pts）</div>
+    <div class="field-row">
+      <input type="number" id="redeemPts" value="50000" min="1000" step="1000" oninput="calc()" />
+      <span class="field-prefix">pts</span>
     </div>
 
     <div class="card-grid">
@@ -363,8 +372,7 @@
   function toggleTcb(){
     const on=document.getElementById('tcbToggle').checked;
     document.getElementById('tcb-block').style.display=on?'block':'none';
-    document.getElementById('d-tcb-row').style.display=on?'flex':'none';
-    document.getElementById('d-effective-row').style.display=on?'flex':'none';
+    document.getElementById('ncd-tcb-row').style.display=on?'flex':'none';
     document.getElementById('vd-tcb-row').style.display=on?'flex':'none';
     calc();
   }
@@ -399,9 +407,7 @@
     document.getElementById('d-addon-label').textContent='加購積分費用（+'+currentAddonPts.toLocaleString()+' pts × '+addonQty+'）';
     document.getElementById('d-addon-cost').textContent='+ NT$'+fmt(addonCostTotal);
     document.getElementById('d-total').textContent='NT$'+fmt(totalWithFees);
-    document.getElementById('d-tcb-rate-label').textContent=tcbRate+'%';
-    document.getElementById('d-tcb-rebate').textContent='− NT$'+fmt(tcbRebate);
-    document.getElementById('d-effective').textContent='NT$'+fmt(totalWithFees-tcbRebate);
+
     document.getElementById('tcb-rebate-summary').textContent='NT$'+fmt(tcbRebate);
 
     const earnUSD=rate/ex;
@@ -426,6 +432,13 @@
 
     const redeemCostTWD=redeemPts*threshold*ex;
     const earnValueTWD=totalPts*threshold*ex;
+    const netCashCost=totalWithFees-tcbRebate-earnValueTWD;
+
+    document.getElementById('ncd-cash').textContent='NT$'+fmt(totalWithFees);
+    document.getElementById('ncd-tcb').textContent='− NT$'+fmt(tcbRebate);
+    document.getElementById('ncd-earn').textContent='− NT$'+fmt(earnValueTWD);
+    document.getElementById('ncd-net').textContent='NT$'+fmt(netCashCost);
+
     const saved=totalWithFees-redeemCostTWD-earnValueTWD-tcbRebate;
     const pct=totalWithFees>0?(saved/totalWithFees*100):0;
 
